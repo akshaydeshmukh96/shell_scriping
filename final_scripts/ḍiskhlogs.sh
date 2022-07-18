@@ -1,5 +1,7 @@
 #!/bin/bash
-#Monitoring Disk Space Utilization and Send Email Alert
+# Monitoring Disk Space Utilization and Send Email Alert
+
+
 THRESHOULD=10
 mailto="root"
 HOSTNAME=$(hostname)
@@ -13,8 +15,8 @@ done
 
 VALUE=`cat /tmp/temp | wc -l`
         if [ $VALUE -ge 1 ]; then
-	echo " Disk Usage is Critical"
         mail -s "$HOSTNAME Disk Usage is Critical" $mailto < /tmp/temp
         fi
 
 rm -rf /tmp/temp
+
