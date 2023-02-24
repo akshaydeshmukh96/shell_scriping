@@ -1,0 +1,252 @@
+
+#!/bin/ksh
+echo ""
+df -k /var > /tmp/xxx
+echo "Current:"
+cat /tmp/xxx
+lsof /var |grep -i deleted | awk '{print $2}' | awk '!x[$0]++' | xargs kill -9 > /dev/null 2>&1
+if [ -d "/var/log/" ]
+then
+cd /var/log/
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip $i > $i-`date +%d%m%y`.gz;done
+fi
+find /var/log/messages*|xargs rm
+find /var/tmp/oradiag_root/diag/clients/user_root/|grep sql|xargs rm
+
+if [ -d "/var/log/hadoop-hdfs/" ]
+then
+cd /var/log/hadoop-hdfs/
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip $i > $i-`date +%d%m%y`.gz;done
+fi
+
+find /var/|grep 7Server|xargs rm -rf
+
+if [ -d "/var/log/zookeeper/" ]
+then
+cd /var/log/zookeeper
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip $i > $i-`date +%d%m%y`.gz;done
+fi
+
+if [ -d "/var/log/hive/" ]
+then
+cd /var/log/hive
+ls|grep log|xargs rm
+fi
+
+if [ -d "/var/crash/" ]
+then
+rm -rf /var/crash/*
+fi
+
+if [ -d "/var/opt/opsware/agent/" ]
+then
+cd  /var/opt/opsware/agent/
+ls |grep log|xargs rm
+fi
+
+if [ -d "/var/log/cloudera-scm-server/" ]
+then
+cd  /var/log/cloudera-scm-server
+ls |egrep "log|out"|xargs rm
+fi
+
+
+if [ -d "/var/log/impalad/" ]
+then
+cd  /var/log/impalad
+ls |egrep "log|core"|xargs rm
+fi
+
+if [ -d "/var/log/kafka/" ]
+then
+cd  /var/log/kafka/
+ls |grep log|xargs rm
+fi
+
+if [ -d "/var/log/hds/Log_Files/" ]
+then
+find /var/log/hds/Log_Files/ -mtime +7|egrep "cvlaunchd_|cvd_|ClMgrS_|ApplicationMgr_"|grep .log|xargs rm
+fi
+
+
+if [ -d "/var/log/cloudera-scm-alertpublisher/" ]
+then
+cd /var/log/cloudera-scm-alertpublisher/
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip $i > $i-`date +%d%m%y`.gz;done
+
+fi
+if [ -d "/var/log/cloudera-scm-firehose/" ]
+then
+cd /var/log/cloudera-scm-firehose/
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip $i > $i-`date +%d%m%y`.gz;done
+
+fi
+if [ -d "/var/log/cloudera-scm-alertpublisher/" ]
+then
+cd /var/log/cloudera-scm-alertpublisher/
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip $i > $i-`date +%d%m%y`.gz;done
+
+fi
+if [ -d "/var/log/oozie/" ]
+then
+cd /var/log/oozie/
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip $i > $i-`date +%d%m%y`.gz;done
+
+fi
+
+if [ -d "/var/log/cloudera-scm-alertpublisher" ]
+then
+cd /var/log/cloudera-scm-alertpublisher
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip $i > $i-`date +%d%m%y`.gz;done
+fi
+
+
+
+rm /var/lib/mlocate/mlocate.db* > /dev/null 2>&1
+if [ -d "/var/spool/mail" ]
+then
+cd /var/spool/mail
+for i in `ls -l|awk '{print $9}'`;do cat /dev/null > $i;done
+
+fi
+if [ -d "cd /var/mail" ]
+then
+cd /var/mail
+for i in `ls -l|awk '{print $9}'`;do cat /dev/null > $i;done
+
+fi
+if [ -d "/var/opt/wbem" ]
+then
+cd /var/opt/wbem
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip  $i > $i-`date +%d%m%y`.gz;done
+fi
+
+if [ -d "/var/log/hadoop-mapreduce/" ]
+then
+cd /var/log/hadoop-mapreduce/
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip  $i > $i-`date +%d%m%y`.gz;done
+fi
+
+if [ -d "/var/log/cloudera-scm-headlamp/" ]
+then
+cd /var/log/cloudera-scm-headlamp/
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip  $i > $i-`date +%d%m%y`.gz;done
+fi
+
+if [ -d "/var/opt/perf/datafiles" ]
+then
+cd /var/opt/perf/datafiles
+ls -l|egrep tar|awk '{print $9}'|sort|sed \$d > deleted
+for i in `cat deleted`;do rm $i;done
+fi
+
+if [ -d "/var/log/hbase/" ]
+then
+cd /var/log/hbase/
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip  $i > $i-`date +%d%m%y`.gz;done
+fi
+
+if [ -d "/var/log/catalogd/" ]
+then
+cd /var/log/catalogd/
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip  $i > $i-`date +%d%m%y`.gz;done
+fi
+
+if [ -d "/var/log/cloudera-scm-eventserver/" ]
+then
+cd /var/log/cloudera-scm-eventserver
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip  $i > $i-`date +%d%m%y`.gz;done
+fi
+
+
+if [ -d "/var/ibm/biginsights/hbase/logs/" ]
+then
+cd /var/ibm/biginsights/hbase/logs/
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip  $i > $i-`date +%d%m%y`.gz;done
+fi
+
+if [ -d "/var/ibm/biginsights/hadoop/logs/" ]
+then
+cd /var/ibm/biginsights/hadoop/logs/
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip  $i > $i-`date +%d%m%y`.gz;done
+fi
+
+if [ -d "/var/log/hadoop-yarn/" ]
+then
+cd /var/log/hadoop-yarn/
+ls |grep gz|xargs rm
+for i in `ls -p|grep -v /`;do gzip  $i > $i-`date +%d%m%y`.gz;done
+fi
+
+if [ -d "/var/opt/omni/log/" ]
+then
+cd /var/opt/omni/log/
+for i in `ls -l|awk '{print $9}'|grep -v gz`;do cat /dev/null > $i;done
+fi
+
+if [ -d "/var/log/httpd/" ]
+then
+cd /var/log/httpd
+for i in `ls -l|awk '{print $9}'|grep -v gz`;do cat /dev/null > $i;done
+fi
+
+if [ -d "/var/log/sa/" ]
+then
+find /var/log/sa/ -mtime +3|xargs rm
+fi
+
+
+if [ -d "/var/log/hds/Log_Files/" ]
+then
+ls /var/log/hds/Log_Files|egrep -i "ClMgrS_|ApplicationMgr|FileScan"|xargs rm
+fi
+
+cat /dev/null > /var/opt/opsware/agent/swprovlog > /dev/null 2>&1
+rm -rf /var/tmp/*
+
+find /var|egrep "ClMgrS_|cvlaunchd_|cvd_|ApplicationMgr_|PerformanceMetrics_"|grep .log|xargs rm
+lsof /var |grep -i deleted | awk '{print $2}' | awk '!x[$0]++' | xargs kill -9 > /dev/null 2>&1
+service rsyslog restart
+sleep 3
+df -k /var > /tmp/xxx
+echo ""
+echo " ````````````````````````````"
+echo "          After:"
+echo " ````````````````````````````"
+echo ""
+cat /tmp/xxx
+        if [ `cat /tmp/xxx|tail -1|awk '{print $5}'|sed 's/%//'` -gt 80 ]
+        then
+echo ""
+        echo "          /var usage is still high and over the thershold:"
+echo ""
+        cat /tmp/xxx
+echo ""
+        echo "          Generating /var report, please wait..."
+echo ""
+          mkdir /var/adm > /dev/null 2>&1
+         /system_kits/tmp/roei/var_check.ksh -fs=/var;cat /var/adm/var_report.log
+        fi
+        echo ""
+echo "                ---=== D - O - N - E ===---"
+echo ""
+
+echo ""
+rm /tmp/xxx
+
