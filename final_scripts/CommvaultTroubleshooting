@@ -1,0 +1,239 @@
+#!/bin/bash
+clear
+
+echo -e "|**********************************************************************|"
+echo "                  Start time - `date`"
+echo -e "|**********************************************************************|"
+echo ""
+start_time=$(date +%s)
+mkdir /tmp/comm/  2>/dev/null
+a=$(date +%a%H:%M)
+touch /tmp/comm/$a.log 2>/dev/null
+> /tmp/comm/$a.log
+
+servers=$(cat backup-servers )
+for A in $servers
+do
+
+echo -e "\033[40;37m                    Server name=\033[01;04m $A \033[0m \033[0m"
+echo "" >> /tmp/comm/$a.log
+
+echo "$A:-" >>/tmp/comm/$a.log
+
+
+ping -c 2 $A >> /dev/null
+        if [ $? -le 0 ]; then
+        echo "                    *****Server is UP*****"
+        else
+        echo -e "               \033[31m *****Server is Down***** \033[0m"
+        echo "          • Server is Down" >> /tmp/comm/$a.log
+        fi
+echo""
+
+timeout 15 ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey $A "echo -n" &>/dev/null
+
+  if [ $? -eq 0 ]; then
+        echo "                   * $A SSH SUCCESS *"
+        roei  2>>/dev/null >>/dev/null
+        scp var2 root@$A:/tmp/ 2>>/dev/null >>/dev/null
+else
+        timeout 15 ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -p 2222 $A "echo -n" &>/dev/null
+
+  if [ $? -eq 0 ]; then
+        echo "                   * $A SSH SUCCESS *"
+        roei  2>>/dev/null >>/dev/null
+        scp var2 root@$A:/tmp/ 2>>/dev/null >>/dev/null
+else
+        echo -e "                    \033[31m* $A SSH FAIL *\033[0m"
+  fi
+        echo -e "                   $A \033[1;31m* FAIL *\033[0m" >>/dev/null
+        echo "          • SSH Failed " >> /tmp/comm/$a.log
+  fi
+
+echo ""
+
+
+for S in "ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey $A sh" "ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -p 2222 $A"
+do
+$S  2>/dev/null << 'EOF'
+touch /tmp/akshay
+>/tmp/akshay
+
+#echo "2.UPTIME"
+echo "             *server is up for `uptime|awk '{print $3,$4}' | sed s'/\,//g'`* "
+echo""
+echo -e "\033[02m-------------------------------------------------------------------------\033[0m"
+#echo "Checking commvault version & Commserve client name: "
+
+for i in HitachiHDS simpana
+do
+$i    2>/dev/null >> /dev/null
+if [ $? -eq 1 ]; then
+        I=$i
+        echo "$i run successfully, Commvault is installed." >>/dev/null
+        break
+else
+        echo -e "\033[31mAgent is not installed on server" >>dev/null
+        fi
+done
+
+
+if [ -z $I ]; then
+echo -e "\033[31m Agent is not installed on server \033[0m"
+echo "          • Agent is not installed on server" >>/tmp/akshay
+exit
+else
+echo "*****Software Installed properly*****" >>/dev/null
+fi
+
+
+f=`$I status | grep Instance | wc -l`
+if [ $f -eq 1 ];then
+        echo "Only one instance Available"  >>/dev/null
+elif [$f -eq 0];then
+        echo -e "\033[31m No instance Available \033[0m"
+        echo "          • No instance Available" >>/tmp/akshay
+else
+        echo -e "\033[31m• More than one instance Available; Please Remove unwanted Instances \033[0m"
+        echo "          • More than one instance Available; Please Remove unwanted Instances" >>/tmp/akshay
+        echo""
+fi
+
+
+
+g=`$I status| grep Version`
+h=`$I status | grep Version | awk '{print $3}' | cut -d . -f1,2`
+#echo  "Installed $g"
+if [ $h = 11.28 ]
+then
+echo "Installed Version is $h, No need to upgarde"
+else
+echo -e "\033[31m• Installed version is $h, Need Upgarde Version to 11.28, Please follow KB= KB0024379  \033[0m"
+echo "          • Upgarde Version to latest verion 11.28, Please follow KB= KB0024379" >>/tmp/akshay
+fi
+
+echo ""
+
+CLN=`$I status |grep 'CommServe Client Name'| awk '{print $5}'`
+CHD=`$I status |grep 'Home Directory'|awk '{print $4}'`
+echo -e "commServe Client is \033[33m$CLN \033[0m& Home Directory is \033[33m$CHD \033[0m"
+b=`$I status | grep 'CommServe Client Name' | awk '{ print $5 }'`
+ if [ -z $b ]; then
+echo -e "\033[31m Software is not installed properly \033[0m"
+echo "          • Software is not installed properly" >>/tmp/akshay
+else
+echo "*****Software Installed properly*****" >>/dev/null
+fi
+
+
+
+echo -e "\033[02m-------------------------------------------------------------------------\033[0m"
+
+echo ""
+#echo -e  "Restart commvault services: "
+
+$I restart  >> /dev/null
+if [ $? -le 1 ]; then
+        echo "• Commvault services restart successfully"
+else
+        echo -e "\033[31m Services restart Failed \033[0m"
+echo "          • Services restart Failed" >>/tmp/akshay
+fi
+
+echo ""
+echo -e "\033[02m-------------------------------------------------------------------------\033[0m"
+
+#echo   "Checking connection between commvault & client computer(cvping):"
+echo""
+e=`$I status | grep 'Home Directory' | awk '{print $4}'`
+cd $e  2> /dev/null
+if [ $? -eq 0 ]; then
+timeout 5       ./cvping $b >> /dev/null
+                if [ $? -eq 0 ];then
+                        echo "• CVping Done,Successfully connected to Commvault"
+                else
+                        echo -e "\033[31mCVPing Failed, unable to connect commvault....Please connect to Backup Team. \033[0m"
+                        echo "          • CVPing Failed, unable to connect commserver....check if server is in DMZ and inform to Backup Team." >>/tmp/akshay
+               fi
+else
+        echo -e " \031[33m Home directory Not Found; Please check manually... \033[0m"
+        echo "          • CVPing Failed, Home directory Not Found; Please check manually..." >>/tmp/akshay
+
+fi
+echo ""
+echo -e "\033[02m-------------------------------------------------------------------------\033[0m"
+
+echo ""
+
+
+echo "Checking space utilization :"
+echo ""
+#echo "                  ***OPT***"
+c=`df -m /opt|awk '{print $4}'|grep -vi available |sed s'/\%//g'`
+if [ $c -ge 250 ];then
+        echo  "• Free space available in /opt; available space=$c MB"
+else
+        echo -e " \033[31m• OPT is Full, Please connect FLS \033[0m"
+        echo "          • OPT is Full, Please connect FLS" >>/tmp/akshay
+fi
+#echo""
+
+
+#echo "                  ***VAR***"
+C=`df -h /var | awk '{print $5}'|grep -vi use|sed s'/\%//g'`
+if [ $C -le 85 ];then
+        echo -e "• Free space available in /var; Value=$C% Used"
+else
+        echo -e " \033[31m• VAR is exceed limit; current value=$C% \033[0m"
+        echo "Please wait... Trying to reduce space..."
+        cd /tmp/    >>/dev/null
+        ./var2       >>/dev/null
+
+
+
+                r=`df -h /var | awk '{print $5}'|grep -vi use|sed s'/\%//g'`
+                if [ $r -ge 85 ];then
+                echo -e " \033[31m• No Luck, Please connect unix FLS \033[0m"
+                echo "          • var is $r% full, Please connect with FLS" >>/tmp/akshay
+                else
+                echo "*****Current Value = $r *****"
+                fi
+
+fi
+rm -rf /tmp/var2  >>dev/null
+echo ""
+EOF
+if [ $? -eq 0 ];then
+ssh $A "cat /tmp/akshay" >>/tmp/comm/$a.log | >>/dev/null
+
+break
+else
+echo -e " \033[31m SSH Failed....... \033[0m" >>/dev/null
+fi
+done
+echo "*************************************************************************"
+done
+echo""
+echo -e "\033[37;01m                                    \033[05;41m ALL ERRORS \033[0m \033[0m \033[0m"
+echo""
+echo ""
+cat /tmp/comm/$a.log
+echo""
+
+echo"" >>/tmp/comm/$a.log
+end_time=$(date +%s)
+total_time=$((end_time - start_time))
+
+echo ""
+echo ""
+echo "          |**********************************************************************|"
+echo "          |                                                                      |"
+echo -e "          |                 \033[5mLog File -/tmp/comm/$a.log \033[0m                    |"
+echo "          |                                                                      |"
+echo "          |**********************************************************************|"
+
+
+echo "                | *Total running time: $total_time seconds*    |"
+echo""
+echo ""
+echo "                                  ---=== D - O - N - E ===---"
