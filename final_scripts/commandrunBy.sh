@@ -12,3 +12,4 @@ cat /home/$variable/.bash_history  |tail -30 | grep -e $a     2> /dev/null  1> /
 
 
 
+done
